@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deuna | Pagos y Transferencias Inmediatas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+      [v-cloak] { display: none !important; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #f8fafc; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      body { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f8fafc; }
+      .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
+      .toast-enter-from { opacity: 0; transform: translateY(-20px); }
+      .toast-leave-to { opacity: 0; transform: translateY(-20px); }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              purple: {
+                50: '#faf5ff',
+                100: '#f3e8ff',
+                500: '#a855f7',
+                600: '#9333ea',
+                700: '#7e22ce',
+                800: '#6b21a8',
+                900: '#581c87',
+              }
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-gray-50 text-slate-800 font-sans min-h-screen flex flex-col">
+    <div id="app" v-cloak class="flex-grow flex flex-col">
+      <header class="bg-white shadow-sm border-b border-gray-100 py-4 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Deuna</h1>
+          </div>
+          <div class="flex items-center gap-4">
+            <button @click="seedData" class="text-sm px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-slate-600 rounded-lg transition-colors font-medium border border-gray-200">
+              Poblar Datos (Seed)
+            </button>
+            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center border border-purple-200">
+              <span class="text-purple-700 font-bold text-sm">US</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full flex flex-col md:flex-row gap-8">
+        <div class="md:w-2/3 flex flex-col gap-6">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">Mis Cuentas</h2>
+            <div v-if="cuentas.length === 0" class="text-slate-500 text-sm italic">
+              No hay cuentas disponibles. Usa el botón "Poblar Datos".
+            </div>
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div v-for="cuenta in cuentas.slice(0, 4)" :key="cuenta.id" class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-5 text-white shadow-md relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+                <div class="text-purple-100 text-sm font-medium mb-1">Cuenta Deuna</div>
+                <div class="text-2xl font-bold mb-4">${{ Number(cuenta.saldo).toFixed(2) }}</div>
+                <div class="flex justify-between items-end">
+                  <div class="text-sm font-medium opacity-90">{{ cuenta.numero_cuenta }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex border-b border-gray-100">
+              <button @click="activeTab = 'transferir'" :class="['flex-1 py-4 text-center font-bold text-sm transition-colors', activeTab === 'transferir' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50']">
+                Transferir Dinero
+              </button>
+              <button @click="activeTab = 'recargar'" :class="['flex-1 py-4 text-center font-bold text-sm transition-colors', activeTab === 'recargar' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50']">
+                Recargar Cuenta
+              </button>
+            </div>
+
+            <div class="p-6 md:p-8">
+              <div v-if="activeTab === 'transferir'" class="animation-fade-in">
+                <h3 class="text-xl font-bold text-slate-800 mb-6">Enviar Dinero</h3>
+                <form @submit.prevent="transferir" class="space-y-5">
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Cuenta Origen</label>
+                    <select v-model="transferForm.origen" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                      <option value="" disabled>Seleccione una cuenta</option>
+                      <option v-for="c in cuentas" :key="c.id" :value="c.numero_cuenta">{{ c.numero_cuenta }} - Saldo: ${{ Number(c.saldo).toFixed(2) }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Cuenta Destino (Alias o Número)</label>
+                    <input type="text" v-model="transferForm.destino" placeholder="Número de cuenta o alias" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Monto a Transferir ($)</label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-slate-400 font-bold">$</span>
+                      </div>
+                      <input type="number" step="0.01" min="0.01" v-model="transferForm.monto" placeholder="0.00" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl pl-8 pr-4 py-3 font-semibold text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                    </div>
+                  </div>
+                  <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-purple-600/30 transition-all transform active:scale-95 flex justify-center items-center gap-2 mt-4">
+                    <span>Confirmar Transferencia</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  </button>
+                </form>
+              </div>
+
+              <div v-if="activeTab === 'recargar'" class="animation-fade-in">
+                <h3 class="text-xl font-bold text-slate-800 mb-6">Recargar Saldo</h3>
+                <form @submit.prevent="recargar" class="space-y-5">
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Cuenta a Recargar</label>
+                    <select v-model="recargaForm.numero_cuenta" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                      <option value="" disabled>Seleccione una cuenta</option>
+                      <option v-for="c in cuentas" :key="c.id" :value="c.numero_cuenta">{{ c.numero_cuenta }} - Saldo: ${{ Number(c.saldo).toFixed(2) }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Método de Pago (Tarjeta)</label>
+                    <select v-model="recargaForm.numero_tarjeta" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                      <option value="" disabled>Seleccione una tarjeta</option>
+                      <option v-for="t in tarjetas" :key="t.id" :value="t.numero_tarjeta">{{ t.banco }} - ****{{ t.numero_tarjeta.slice(-4) }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Monto a Recargar ($)</label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-slate-400 font-bold">$</span>
+                      </div>
+                      <input type="number" step="0.01" min="0.01" v-model="recargaForm.monto" placeholder="0.00" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl pl-8 pr-4 py-3 font-semibold text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                    </div>
+                  </div>
+                  <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-purple-600/30 transition-all transform active:scale-95 flex justify-center items-center gap-2 mt-4">
+                    <span>Confirmar Recarga</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="md:w-1/3">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              Actividad Reciente
+            </h2>
+
+            <div v-if="transacciones.length === 0" class="text-center py-8 text-slate-400">
+              <svg class="w-12 h-12 mx-auto mb-3 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <p class="text-sm font-medium">No hay transacciones aún</p>
+            </div>
+
+            <div v-else class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+              <div v-for="t in transacciones.slice(0, 10)" :key="t._id" class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                <div class="flex items-center gap-3">
+                  <div :class="['w-10 h-10 rounded-full flex items-center justify-center shrink-0', t.tipo === 'recarga' ? 'bg-emerald-100 text-emerald-600' : 'bg-purple-100 text-purple-600']">
+                    <svg v-if="t.tipo === 'recarga'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+                    <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                  </div>
+                  <div>
+                    <p class="text-sm font-bold text-slate-800 capitalize">{{ t.tipo }}</p>
+                    <p class="text-xs text-slate-500 line-clamp-1">Hacia: {{ t.destino }}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p :class="['text-sm font-bold', t.tipo === 'recarga' ? 'text-emerald-600' : 'text-slate-800']">
+                    {{ t.tipo === 'recarga' ? '+' : '' }}${{ Number(t.monto).toFixed(2) }}
+                  </p>
+                  <p v-if="t.comision > 0" class="text-xs text-red-500 font-semibold mt-0.5">
+                    Comisión: ${{ Number(t.comision).toFixed(2) }}
+                  </p>
+                  <span :class="['text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider', t.estado === 'CONFIRMADA' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700']">
+                    {{ t.estado }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <transition name="toast">
+        <div v-if="notification.show" class="fixed bottom-6 right-6 max-w-sm w-full bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden flex items-start z-50">
+          <div :class="['w-2 h-full absolute left-0 top-0 bottom-0', notification.type === 'success' ? 'bg-emerald-500' : 'bg-red-500']"></div>
+          <div class="pl-6 pr-4 py-4 flex items-start gap-3 w-full">
+            <svg v-if="notification.type === 'success'" class="w-6 h-6 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg v-else class="w-6 h-6 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="flex-grow">
+              <h4 :class="['text-sm font-bold', notification.type === 'success' ? 'text-emerald-700' : 'text-red-700']">
+                {{ notification.type === 'success' ? '¡Éxito!' : 'Error' }}
+              </h4>
+              <p class="text-sm text-slate-600 mt-1">{{ notification.message }}</p>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </div>
+
+    <script>
+      const { createApp, ref, reactive, onMounted } = Vue;
+
+      const API = {
+        seed: '/api/deuna/seed',
+        cuentas: '/api/deuna/cuentas',
+        tarjetas: '/api/deuna/tarjetas',
+        transacciones: '/api/deuna/transacciones',
+        transferir: '/api/deuna/transferencia',
+        recargar: '/api/deuna/recarga'
+      };
+
+      const app = createApp({
+        setup() {
+          const activeTab = ref('transferir');
+          const transferForm = reactive({ origen: '', destino: '', monto: '' });
+          const recargaForm = reactive({ numero_cuenta: '', numero_tarjeta: '', monto: '' });
+          const notification = reactive({ show: false, message: '', type: 'success' });
+          const cuentas = ref([]);
+          const tarjetas = ref([]);
+          const transacciones = ref([]);
+
+          function showNotification(message, type = 'success') {
+            notification.message = message;
+            notification.type = type;
+            notification.show = true;
+            setTimeout(() => {
+              notification.show = false;
+            }, 4000);
+          }
+
+          async function seedData() {
+            try {
+              const res = await fetch(API.seed, { method: 'POST' });
+              const data = await res.json();
+              if (res.ok) {
+                showNotification(data.message, 'success');
+                fetchData();
+              } else {
+                showNotification(data.error || 'Error al poblar base de datos', 'error');
+              }
+            } catch (error) {
+              showNotification('Error de conexión', 'error');
+            }
+          }
+
+          async function fetchData() {
+            try {
+              const [rCuentas, rTarjetas, rTrans] = await Promise.all([
+                fetch(API.cuentas).then((res) => res.json()),
+                fetch(API.tarjetas).then((res) => res.json()),
+                fetch(API.transacciones).then((res) => res.json())
+              ]);
+              cuentas.value = rCuentas || [];
+              tarjetas.value = rTarjetas || [];
+              transacciones.value = rTrans || [];
+
+              if (cuentas.value.length > 0 && !transferForm.origen) {
+                transferForm.origen = cuentas.value[0].numero_cuenta;
+                recargaForm.numero_cuenta = cuentas.value[0].numero_cuenta;
+              }
+              if (tarjetas.value.length > 0 && !recargaForm.numero_tarjeta) {
+                recargaForm.numero_tarjeta = tarjetas.value[0].numero_tarjeta;
+              }
+            } catch (error) {
+              console.error('Error fetching data:', error);
+            }
+          }
+
+          async function transferir() {
+            try {
+              const res = await fetch(API.transferir, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  origen: transferForm.origen,
+                  destino: transferForm.destino,
+                  monto: parseFloat(transferForm.monto)
+                })
+              });
+              const data = await res.json();
+              if (res.ok) {
+                showNotification('Transferencia exitosa!', 'success');
+                transferForm.destino = '';
+                transferForm.monto = '';
+                fetchData();
+              } else {
+                showNotification(data.error || 'Error en transferencia', 'error');
+              }
+            } catch (error) {
+              showNotification('Error de conexión', 'error');
+            }
+          }
+
+          async function recargar() {
+            try {
+              const res = await fetch(API.recargar, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  numero_cuenta: recargaForm.numero_cuenta,
+                  numero_tarjeta: recargaForm.numero_tarjeta,
+                  monto: parseFloat(recargaForm.monto)
+                })
+              });
+              const data = await res.json();
+              if (res.ok) {
+                showNotification('Recarga exitosa!', 'success');
+                recargaForm.monto = '';
+                fetchData();
+              } else {
+                showNotification(data.error || 'Error en recarga', 'error');
+              }
+            } catch (error) {
+              showNotification('Error de conexión', 'error');
+            }
+          }
+
+          onMounted(() => {
+            fetchData();
+          });
+
+          return {
+            activeTab,
+            transferForm,
+            recargaForm,
+            notification,
+            cuentas,
+            tarjetas,
+            transacciones,
+            transferir,
+            recargar,
+            seedData,
+            fetchData
+          };
+        }
+      });
+
+      app.mount('#app');
+    </script>
+  </body>
+</html>
