@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 
 import getRoutes from './api_get_service/routes.js';
 import postRoutes from './api_post_service/routes.js';
+import putRoutes from './api_put_service/routes.js';
+import deleteRoutes from './api_delete_service/routes.js';
 import { connectToDatabase, seedDatabase } from './db_service/database.js';
 
 dotenv.config();
@@ -19,6 +21,8 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(getRoutes);
 app.use(postRoutes);
+app.use(putRoutes);
+app.use(deleteRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (_req, res) => {

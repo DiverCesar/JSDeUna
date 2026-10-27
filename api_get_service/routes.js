@@ -24,6 +24,26 @@ router.get('/api/deuna/tarjetas', async (_req, res) => {
   }
 });
 
+router.get('/api/deuna/tarjetas/:id', async (req, res) => {
+  try {
+    const { tarjetas } = await getCollections();
+    const param = req.params.id;
+    let query;
+    if (!isNaN(Number(param))) {
+      query = { id: Number(param) };
+    } else {
+      query = { numero_tarjeta: param };
+    }
+    const card = await tarjetas.findOne(query);
+    if (!card) {
+      return res.status(404).json({ ok: false, error: 'Tarjeta no encontrada' });
+    }
+    res.json(serialize(card));
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 router.get('/api/deuna/transacciones', async (_req, res) => {
   try {
     const { transacciones } = await getCollections();
