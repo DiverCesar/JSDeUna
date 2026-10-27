@@ -7,6 +7,7 @@ import getRoutes from './api_get_service/routes.js';
 import postRoutes from './api_post_service/routes.js';
 import putRoutes from './api_put_service/routes.js';
 import deleteRoutes from './api_delete_service/routes.js';
+import clienteRoutes from './src/routes/clienteRoutes.js';
 import { connectToDatabase, seedDatabase } from './db_service/database.js';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(getRoutes);
 app.use(postRoutes);
 app.use(putRoutes);
 app.use(deleteRoutes);
+app.use(clienteRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (_req, res) => {
