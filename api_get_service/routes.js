@@ -14,6 +14,30 @@ router.get('/api/deuna/cuentas', async (_req, res) => {
   }
 });
 
+// GET: Obtener una cuenta específica por ID o número de cuenta
+router.get('/api/deuna/cuentas/:id', async (req, res) => {
+  try {
+    const { cuentas } = await getCollections();
+    const param = req.params.id;
+    let query;
+
+    if (!isNaN(Number(param))) {
+      query = { id: Number(param) };
+    } else {
+      query = { numero_cuenta: param };
+    }
+
+    const cuenta = await cuentas.findOne(query);
+    if (!cuenta) {
+      return res.status(404).json({ ok: false, error: 'Cuenta no encontrada' });
+    }
+
+    res.json(serialize(cuenta));
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 router.get('/api/deuna/tarjetas', async (_req, res) => {
   try {
     const { tarjetas } = await getCollections();

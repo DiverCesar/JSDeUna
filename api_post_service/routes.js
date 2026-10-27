@@ -73,4 +73,107 @@ router.post('/api/deuna/tarjetas', async (req, res) => {
   }
 });
 
+// ==========================================
+// CRUD CUENTAS
+// ==========================================
+
+// 1. CREATE (POST: Crear una nueva cuenta)
+router.post('/api/deuna/cuentas', async (req, res) => {
+  try {
+    const { cliente_id, numero_cuenta, alias, saldo, estado_cuenta } = req.body;
+
+    if (!numero_cuenta || alias === undefined) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Faltan campos requeridos: numero_cuenta, alias'
+      });
+    }
+
+    const { cuentas } = await getCollections();
+
+    // Auto-generar el ID incremental numérico
+    let newId = req.body.id;
+    if (!newId) {
+      const last = await cuentas.find({}).sort({ id: -1 }).limit(1).toArray();
+      newId = last.length > 0 && typeof last[0].id === 'number' ? last[0].id + 1 : 1;
+    }
+
+    const nuevaCuenta = {
+      id: Number(newId),
+      cliente_id: Number(cliente_id || 1),
+      numero_cuenta: String(numero_cuenta),
+      alias: String(alias),
+      saldo: Number(saldo || 0),
+      estado_cuenta: String(estado_cuenta || 'ACTIVA')
+    };
+
+    const result = await cuentas.insertOne(nuevaCuenta);
+
+    res.status(201).json({
+      ok: true,
+      message: 'Cuenta creada exitosamente',
+      cuenta: serialize({ ...nuevaCuenta, _id: result.insertedId })
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// 2. UPDATE (PUT: Actualizar cuenta existente por ID)
+router.put('/api/deuna/cuentas/:id', async (req, res) => {
+  try {
+    const param = req.params.id;
+    const { alias, saldo, estado_cuenta } = req.body;
+    const { cuentas } = await getCollections();
+
+    let query = !isNaN(Number(param)) ? { id: Number(param) } : { numero_cuenta: param };
+
+    const updateFields = {};
+    if (alias !== undefined) updateFields.alias = String(alias);
+    if (saldo !== undefined) updateFields.saldo = Number(saldo);
+    if (estado_cuenta !== undefined) updateFields.estado_cuenta = String(estado_cuenta);
+
+    const result = await cuentas.findOneAndUpdate(
+      query,
+      { $set: updateFields },
+      { returnDocument: 'after' }
+    );
+
+    if (!result) {
+      return res.status(404).json({ ok: false, error: 'Cuenta no encontrada' });
+    }
+
+    res.json({
+      ok: true,
+      message: 'Cuenta actualizada exitosamente',
+      cuenta: serialize(result)
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// 3. DELETE (DELETE: Eliminar una cuenta por ID)
+router.delete('/api/deuna/cuentas/:id', async (req, res) => {
+  try {
+    const param = req.params.id;
+    const { cuentas } = await getCollections();
+
+    let query = !isNaN(Number(param)) ? { id: Number(param) } : { numero_cuenta: param };
+
+    const result = await cuentas.deleteOne(query);
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ ok: false, error: 'Cuenta no encontrada' });
+    }
+
+    res.json({
+      ok: true,
+      message: 'Cuenta eliminada exitosamente'
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 export default router;
