@@ -87,6 +87,9 @@
               <button @click="activeTab = 'recargar'" :class="['flex-1 py-4 text-center font-bold text-sm transition-colors', activeTab === 'recargar' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50']">
                 Recargar Cuenta
               </button>
+              <button @click="activeTab = 'clientes'" :class="['flex-1 py-4 text-center font-bold text-sm transition-colors', activeTab === 'clientes' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50']">
+                Clientes (CRUD)
+              </button>
             </div>
 
             <div class="p-6 md:p-8">
@@ -151,6 +154,83 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                   </button>
                 </form>
+              </div>
+
+              <!-- Pestaña CRUD Clientes -->
+              <div v-if="activeTab === 'clientes'" class="animation-fade-in space-y-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="text-xl font-bold text-slate-800">
+                      {{ isEditing ? 'Editar Cliente' : 'Registrar Nuevo Cliente' }}
+                    </h3>
+                    <p class="text-xs text-slate-500">Módulo CRUD conectado en tiempo real con MongoDB</p>
+                  </div>
+                  <span class="text-xs bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-full">
+                    {{ clientes.length }} Registrados
+                  </span>
+                </div>
+
+                <!-- Formulario -->
+                <form @submit.prevent="guardarCliente" class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo</label>
+                      <input type="text" v-model="clienteForm.nombre" placeholder="Ej: Carlos Rivera" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico</label>
+                      <input type="email" v-model="clienteForm.email" placeholder="ejemplo@email.com" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1">Teléfono (10 dígitos)</label>
+                      <input type="tel" v-model="clienteForm.telefono" placeholder="0991234567" required pattern="09[0-9]{8}" title="Debe empezar con 09 y tener 10 dígitos" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+                  </div>
+
+                  <div class="flex gap-2 justify-end pt-1">
+                    <button v-if="isEditing" type="button" @click="cancelarEdicion" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-slate-700 rounded-lg text-xs font-bold transition-all">
+                      Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-md shadow-purple-600/30 transition-all flex items-center gap-1.5">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                      <span>{{ isEditing ? 'Guardar Cambios' : 'Registrar Cliente' }}</span>
+                    </button>
+                  </div>
+                </form>
+
+                <!-- Tabla de Clientes -->
+                <div class="overflow-x-auto rounded-xl border border-gray-100">
+                  <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-gray-100">
+                      <tr>
+                        <th class="px-3 py-2.5">ID</th>
+                        <th class="px-3 py-2.5">Nombre</th>
+                        <th class="px-3 py-2.5">Email</th>
+                        <th class="px-3 py-2.5">Teléfono</th>
+                        <th class="px-3 py-2.5 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-slate-700">
+                      <tr v-for="c in clientes" :key="c.id" class="hover:bg-purple-50/30 transition-colors">
+                        <td class="px-3 py-2.5 font-bold text-purple-700">#{{ c.id }}</td>
+                        <td class="px-3 py-2.5 font-medium">{{ c.nombre }}</td>
+                        <td class="px-3 py-2.5 text-slate-500">{{ c.email }}</td>
+                        <td class="px-3 py-2.5 text-slate-500">{{ c.telefono }}</td>
+                        <td class="px-3 py-2.5 text-right space-x-1">
+                          <button @click="editarCliente(c)" title="Editar" class="p-1 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                          </button>
+                          <button @click="eliminarCliente(c.id)" title="Eliminar" class="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                          </button>
+                        </td>
+                      </tr>
+                      <tr v-if="clientes.length === 0">
+                        <td colspan="5" class="px-3 py-6 text-center text-slate-400 italic">No hay clientes registrados.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -223,7 +303,8 @@
         tarjetas: '/api/deuna/tarjetas',
         transacciones: '/api/deuna/transacciones',
         transferir: '/api/deuna/transferencia',
-        recargar: '/api/deuna/recarga'
+        recargar: '/api/deuna/recarga',
+        clientes: '/api/deuna/clientes'
       };
 
       const app = createApp({
@@ -231,10 +312,13 @@
           const activeTab = ref('transferir');
           const transferForm = reactive({ origen: '', destino: '', monto: '' });
           const recargaForm = reactive({ numero_cuenta: '', numero_tarjeta: '', monto: '' });
+          const clienteForm = reactive({ id: null, nombre: '', email: '', telefono: '' });
+          const isEditing = ref(false);
           const notification = reactive({ show: false, message: '', type: 'success' });
           const cuentas = ref([]);
           const tarjetas = ref([]);
           const transacciones = ref([]);
+          const clientes = ref([]);
 
           function showNotification(message, type = 'success') {
             notification.message = message;
@@ -262,14 +346,16 @@
 
           async function fetchData() {
             try {
-              const [rCuentas, rTarjetas, rTrans] = await Promise.all([
+              const [rCuentas, rTarjetas, rTrans, rClientes] = await Promise.all([
                 fetch(API.cuentas).then((res) => res.json()),
                 fetch(API.tarjetas).then((res) => res.json()),
-                fetch(API.transacciones).then((res) => res.json())
+                fetch(API.transacciones).then((res) => res.json()),
+                fetch(API.clientes).then((res) => res.json())
               ]);
               cuentas.value = rCuentas || [];
               tarjetas.value = rTarjetas || [];
               transacciones.value = rTrans || [];
+              clientes.value = rClientes || [];
 
               if (cuentas.value.length > 0 && !transferForm.origen) {
                 transferForm.origen = cuentas.value[0].numero_cuenta;
@@ -332,6 +418,64 @@
             }
           }
 
+          function editarCliente(c) {
+            isEditing.value = true;
+            clienteForm.id = c.id;
+            clienteForm.nombre = c.nombre;
+            clienteForm.email = c.email;
+            clienteForm.telefono = c.telefono;
+          }
+
+          function cancelarEdicion() {
+            isEditing.value = false;
+            clienteForm.id = null;
+            clienteForm.nombre = '';
+            clienteForm.email = '';
+            clienteForm.telefono = '';
+          }
+
+          async function guardarCliente() {
+            try {
+              const method = isEditing.value ? 'PUT' : 'POST';
+              const url = isEditing.value ? `${API.clientes}/${clienteForm.id}` : API.clientes;
+              const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  nombre: clienteForm.nombre,
+                  email: clienteForm.email,
+                  telefono: clienteForm.telefono
+                })
+              });
+              const data = await res.json();
+              if (res.ok && data.ok) {
+                showNotification(data.message || 'Cliente guardado exitosamente', 'success');
+                cancelarEdicion();
+                fetchData();
+              } else {
+                showNotification(data.error || 'Error al procesar cliente', 'error');
+              }
+            } catch (error) {
+              showNotification('Error de conexión', 'error');
+            }
+          }
+
+          async function eliminarCliente(id) {
+            if (!confirm(`¿Estás seguro de eliminar al cliente #${id}?`)) return;
+            try {
+              const res = await fetch(`${API.clientes}/${id}`, { method: 'DELETE' });
+              const data = await res.json();
+              if (res.ok && data.ok) {
+                showNotification(data.message || 'Cliente eliminado con éxito', 'success');
+                fetchData();
+              } else {
+                showNotification(data.error || 'No se pudo eliminar el cliente', 'error');
+              }
+            } catch (error) {
+              showNotification('Error de conexión', 'error');
+            }
+          }
+
           onMounted(() => {
             fetchData();
           });
@@ -340,12 +484,19 @@
             activeTab,
             transferForm,
             recargaForm,
+            clienteForm,
+            isEditing,
             notification,
             cuentas,
             tarjetas,
             transacciones,
+            clientes,
             transferir,
             recargar,
+            editarCliente,
+            cancelarEdicion,
+            guardarCliente,
+            eliminarCliente,
             seedData,
             fetchData
           };
