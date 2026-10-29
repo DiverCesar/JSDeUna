@@ -100,7 +100,7 @@ export async function seedDatabase() {
       monto: 25,
       comision: 0.4,
       cuando: new Date().toISOString(),
-      desde_donde: '192.168.1.1',
+      desde_donde: process.env.IP_ADDRESS,
       estado: 'CONFIRMADA',
       tipo: 'transferencia'
     });
