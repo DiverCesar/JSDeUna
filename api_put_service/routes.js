@@ -12,7 +12,7 @@ router.put('/api/deuna/tarjetas/:id', async (req, res) => {
     const param = req.params.id;
 
     let query;
-    if (!isNaN(Number(param))) {
+    if (!Number.isNaN(Number(param))) {
       query = { id: Number(param) };
     } else if (ObjectId.isValid(param)) {
       query = { _id: new ObjectId(param) };

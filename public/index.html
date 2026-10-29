@@ -107,23 +107,23 @@
                 <h3 class="text-xl font-bold text-slate-800 mb-6">Enviar Dinero</h3>
                 <form @submit.prevent="transferir" class="space-y-5">
                   <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Cuenta Origen</label>
-                    <select v-model="transferForm.origen" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <label for="transfer-origen" class="block text-sm font-semibold text-slate-700 mb-1">Cuenta Origen</label>
+                    <select id="transfer-origen" v-model="transferForm.origen" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
                       <option value="" disabled>Seleccione una cuenta</option>
                       <option v-for="c in cuentas" :key="c.id" :value="c.numero_cuenta">{{ c.numero_cuenta }} - Saldo: ${{ Number(c.saldo).toFixed(2) }}</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Cuenta Destino (Alias o Número)</label>
-                    <input type="text" v-model="transferForm.destino" placeholder="Número de cuenta o alias" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <label for="transfer-destino" class="block text-sm font-semibold text-slate-700 mb-1">Cuenta Destino (Alias o Número)</label>
+                    <input id="transfer-destino" type="text" v-model="transferForm.destino" placeholder="Número de cuenta o alias" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Monto a Transferir ($)</label>
+                    <label for="transfer-monto" class="block text-sm font-semibold text-slate-700 mb-1">Monto a Transferir ($)</label>
                     <div class="relative">
                       <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <span class="text-slate-400 font-bold">$</span>
                       </div>
-                      <input type="number" step="0.01" min="0.01" v-model="transferForm.monto" placeholder="0.00" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl pl-8 pr-4 py-3 font-semibold text-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <input id="transfer-monto" type="number" step="0.01" min="0.01" v-model="transferForm.monto" placeholder="0.00" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl pl-8 pr-4 py-3 font-semibold text-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                   </div>
                   <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-purple-600/30 transition-all transform active:scale-95 flex justify-center items-center gap-2 mt-4">
@@ -138,26 +138,26 @@
                 <h3 class="text-xl font-bold text-slate-800 mb-6">Recargar Saldo</h3>
                 <form @submit.prevent="recargar" class="space-y-5">
                   <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Cuenta a Recargar</label>
-                    <select v-model="recargaForm.numero_cuenta" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <label for="recarga-cuenta" class="block text-sm font-semibold text-slate-700 mb-1">Cuenta a Recargar</label>
+                    <select id="recarga-cuenta" v-model="recargaForm.numero_cuenta" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
                       <option value="" disabled>Seleccione una cuenta</option>
                       <option v-for="c in cuentas" :key="c.id" :value="c.numero_cuenta">{{ c.numero_cuenta }} - Saldo: ${{ Number(c.saldo).toFixed(2) }}</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Método de Pago (Tarjeta)</label>
-                    <select v-model="recargaForm.numero_tarjeta" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <label for="recarga-tarjeta" class="block text-sm font-semibold text-slate-700 mb-1">Método de Pago (Tarjeta)</label>
+                    <select id="recarga-tarjeta" v-model="recargaForm.numero_tarjeta" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
                       <option value="" disabled>Seleccione una tarjeta</option>
                       <option v-for="t in (todasTarjetas.length ? todasTarjetas : tarjetas)" :key="t.id" :value="t.numero_tarjeta">{{ t.banco }} - ****{{ t.numero_tarjeta.slice(-4) }}</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Monto a Recargar ($)</label>
+                    <label for="recarga-monto" class="block text-sm font-semibold text-slate-700 mb-1">Monto a Recargar ($)</label>
                     <div class="relative">
                       <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <span class="text-slate-400 font-bold">$</span>
                       </div>
-                      <input type="number" step="0.01" min="0.01" v-model="recargaForm.monto" placeholder="0.00" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl pl-8 pr-4 py-3 font-semibold text-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <input id="recarga-monto" type="number" step="0.01" min="0.01" v-model="recargaForm.monto" placeholder="0.00" required class="w-full bg-gray-50 border border-gray-200 text-slate-800 rounded-xl pl-8 pr-4 py-3 font-semibold text-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                   </div>
                   <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-purple-600/30 transition-all transform active:scale-95 flex justify-center items-center gap-2 mt-4">
@@ -184,16 +184,16 @@
                 <form @submit.prevent="guardarCliente" class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo</label>
-                      <input type="text" v-model="clienteForm.nombre" placeholder="Ej: Carlos Rivera" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="cliente-nombre" class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo</label>
+                      <input id="cliente-nombre" type="text" v-model="clienteForm.nombre" placeholder="Ej: Carlos Rivera" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico</label>
-                      <input type="email" v-model="clienteForm.email" placeholder="ejemplo@email.com" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="cliente-email" class="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico</label>
+                      <input id="cliente-email" type="email" v-model="clienteForm.email" placeholder="ejemplo@email.com" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Teléfono (10 dígitos)</label>
-                      <input type="tel" v-model="clienteForm.telefono" placeholder="0991234567" required pattern="09[0-9]{8}" title="Debe empezar con 09 y tener 10 dígitos" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="cliente-telefono" class="block text-xs font-semibold text-slate-700 mb-1">Teléfono (10 dígitos)</label>
+                      <input id="cliente-telefono" type="tel" v-model="clienteForm.telefono" placeholder="0991234567" required pattern="09[0-9]{8}" title="Debe empezar con 09 y tener 10 dígitos" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                   </div>
 
@@ -270,8 +270,8 @@
                 <form @submit.prevent="guardarCuenta" class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Cliente Propietario</label>
-                      <select v-model="cuentaForm.cliente_id" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="cuenta-cliente" class="block text-xs font-semibold text-slate-700 mb-1">Cliente Propietario</label>
+                      <select id="cuenta-cliente" v-model="cuentaForm.cliente_id" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                         <option value="" disabled>Seleccione un cliente</option>
                         <option v-for="c in (todosClientes.length ? todosClientes : clientes)" :key="c.id" :value="c.id">
                           #{{ c.id }} - {{ c.nombre }}
@@ -279,16 +279,16 @@
                       </select>
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Número de Cuenta</label>
-                      <input type="text" v-model="cuentaForm.numero_cuenta" placeholder="Ej: 0991234567" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="cuenta-numero" class="block text-xs font-semibold text-slate-700 mb-1">Número de Cuenta</label>
+                      <input id="cuenta-numero" type="text" v-model="cuentaForm.numero_cuenta" placeholder="Ej: 0991234567" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Alias / Identificador</label>
-                      <input type="text" v-model="cuentaForm.alias" placeholder="Ej: cuenta_personal" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="cuenta-alias" class="block text-xs font-semibold text-slate-700 mb-1">Alias / Identificador</label>
+                      <input id="cuenta-alias" type="text" v-model="cuentaForm.alias" placeholder="Ej: cuenta_personal" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Saldo Inicial ($)</label>
-                      <input type="number" step="0.01" min="0" v-model="cuentaForm.saldo" placeholder="0.00" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="cuenta-saldo" class="block text-xs font-semibold text-slate-700 mb-1">Saldo Inicial ($)</label>
+                      <input id="cuenta-saldo" type="number" step="0.01" min="0" v-model="cuentaForm.saldo" placeholder="0.00" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                   </div>
 
@@ -363,35 +363,35 @@
                     <form @submit.prevent="guardarTransaccion" class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
-                          <label class="block text-xs font-semibold text-slate-700 mb-1">Propietario</label>
-                          <input type="text" v-model="transaccionForm.quien" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                          <label for="transaccion-propietario" class="block text-xs font-semibold text-slate-700 mb-1">Propietario</label>
+                          <input id="transaccion-propietario" type="text" v-model="transaccionForm.quien" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
                         </div>
                         <div>
-                          <label class="block text-xs font-semibold text-slate-700 mb-1">Origen</label>
-                          <input type="text" v-model="transaccionForm.origen" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                          <label for="transaccion-origen" class="block text-xs font-semibold text-slate-700 mb-1">Origen</label>
+                          <input id="transaccion-origen" type="text" v-model="transaccionForm.origen" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
                         </div>
                         <div>
-                          <label class="block text-xs font-semibold text-slate-700 mb-1">Destino</label>
-                          <input type="text" v-model="transaccionForm.destino" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                          <label for="transaccion-destino" class="block text-xs font-semibold text-slate-700 mb-1">Destino</label>
+                          <input id="transaccion-destino" type="text" v-model="transaccionForm.destino" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
                         </div>
                         <div>
-                          <label class="block text-xs font-semibold text-slate-700 mb-1">Monto ($)</label>
-                          <input type="number" step="0.01" min="0.01" v-model="transaccionForm.monto" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                          <label for="transaccion-monto" class="block text-xs font-semibold text-slate-700 mb-1">Monto ($)</label>
+                          <input id="transaccion-monto" type="number" step="0.01" min="0.01" v-model="transaccionForm.monto" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
                         </div>
                         <div>
-                          <label class="block text-xs font-semibold text-slate-700 mb-1">Comisión ($)</label>
-                          <input type="number" step="0.01" min="0" v-model="transaccionForm.comision" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                          <label for="transaccion-comision" class="block text-xs font-semibold text-slate-700 mb-1">Comisión ($)</label>
+                          <input id="transaccion-comision" type="number" step="0.01" min="0" v-model="transaccionForm.comision" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
                         </div>
                         <div>
-                          <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo</label>
-                          <select v-model="transaccionForm.tipo" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                          <label for="transaccion-tipo" class="block text-xs font-semibold text-slate-700 mb-1">Tipo</label>
+                          <select id="transaccion-tipo" v-model="transaccionForm.tipo" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
                             <option value="transferencia">Transferencia</option>
                             <option value="recarga">Recarga</option>
                           </select>
                         </div>
                         <div>
-                          <label class="block text-xs font-semibold text-slate-700 mb-1">Estado</label>
-                          <select v-model="transaccionForm.estado" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                          <label for="transaccion-estado" class="block text-xs font-semibold text-slate-700 mb-1">Estado</label>
+                          <select id="transaccion-estado" v-model="transaccionForm.estado" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
                             <option value="CONFIRMADA">Confirmada</option>
                             <option value="FALLIDA">Fallida</option>
                           </select>
@@ -462,23 +462,23 @@
                 <form @submit.prevent="guardarTarjeta" class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Cliente Asociado</label>
-                      <select v-model="tarjetaForm.cliente_id" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="tarjeta-cliente" class="block text-xs font-semibold text-slate-700 mb-1">Cliente Asociado</label>
+                      <select id="tarjeta-cliente" v-model="tarjetaForm.cliente_id" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                         <option value="" disabled>Seleccione un cliente</option>
                         <option v-for="c in (todosClientes.length ? todosClientes : clientes)" :key="c.id" :value="c.id">#{{ c.id }} - {{ c.nombre }}</option>
                       </select>
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Banco Emisor</label>
-                      <input type="text" v-model="tarjetaForm.banco" placeholder="Ej: Banco Pichincha" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="tarjeta-banco" class="block text-xs font-semibold text-slate-700 mb-1">Banco Emisor</label>
+                      <input id="tarjeta-banco" type="text" v-model="tarjetaForm.banco" placeholder="Ej: Banco Pichincha" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Número de Tarjeta (16 dígitos)</label>
-                      <input type="text" v-model="tarjetaForm.numero_tarjeta" placeholder="4111222233334444" required maxlength="16" pattern="[0-9]{16}" title="Debe contener exactamente 16 dígitos" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="tarjeta-numero" class="block text-xs font-semibold text-slate-700 mb-1">Número de Tarjeta (16 dígitos)</label>
+                      <input id="tarjeta-numero" type="text" v-model="tarjetaForm.numero_tarjeta" placeholder="4111222233334444" required maxlength="16" pattern="[0-9]{16}" title="Debe contener exactamente 16 dígitos" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1">Vigencia (MM/AA)</label>
-                      <input type="text" v-model="tarjetaForm.fecha_expiracion" placeholder="12/28" required maxlength="5" pattern="(0[1-9]|1[0-2])\/[0-9]{2}" title="Formato MM/AA (ej: 12/28)" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <label for="tarjeta-vigencia" class="block text-xs font-semibold text-slate-700 mb-1">Vigencia (MM/AA)</label>
+                      <input id="tarjeta-vigencia" type="text" v-model="tarjetaForm.fecha_expiracion" placeholder="12/28" required maxlength="5" pattern="(0[1-9]|1[0-2])\/[0-9]{2}" title="Formato MM/AA (ej: 12/28)" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                     </div>
                   </div>
 
