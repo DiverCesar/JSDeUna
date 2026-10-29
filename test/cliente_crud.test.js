@@ -5,6 +5,7 @@ import {
   createCliente,
   deleteCliente,
   getCliente,
+  getClientesPaginated,
   listAllClientes,
   updateCliente,
   validateClienteData
@@ -139,5 +140,23 @@ test('CRUD Clientes - Pruebas completas sobre la entidad clientes', async (t) =>
       telefono: '0812345678'
     });
     assert.equal(errores.length, 3, 'Debe detectar los 3 errores de validación');
+  });
+
+  await t.test('8. PAGINACIÓN - Debe paginar registros de 6 en 6 con total y páginas', async () => {
+    const resP1 = await getClientesPaginated({ page: 1, limit: 6 });
+    assert.ok(Array.isArray(resP1.clientes));
+    assert.equal(resP1.currentPage, 1);
+    assert.equal(resP1.limit, 6);
+    assert.ok(resP1.total >= 10);
+    assert.equal(resP1.totalPages, Math.ceil(resP1.total / 6));
+    assert.equal(resP1.clientes.length, 6);
+
+    const resP2 = await getClientesPaginated({ page: 2, limit: 6 });
+    assert.ok(Array.isArray(resP2.clientes));
+    assert.equal(resP2.currentPage, 2);
+    // Verificar que los IDs de la página 2 sean distintos de la página 1
+    const idsP1 = new Set(resP1.clientes.map(c => c.id));
+    const haySolapamiento = resP2.clientes.some(c => idsP1.has(c.id));
+    assert.equal(haySolapamiento, false, 'No debe haber registros duplicados entre páginas consecutivas');
   });
 });

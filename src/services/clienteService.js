@@ -52,9 +52,38 @@ export function buildClienteQuery(param) {
 }
 
 /**
- * Obtener todos los clientes.
+ * Obtener clientes paginados con cálculo de total y páginas.
  */
-export async function listAllClientes() {
+export async function getClientesPaginated({ page = 1, limit = 6 } = {}) {
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 6));
+  const skip = (pageNum - 1) * limitNum;
+
+  const { clientes } = await getCollections();
+  const [total, list] = await Promise.all([
+    clientes.countDocuments(),
+    clientes.find({}).sort({ id: 1 }).skip(skip).limit(limitNum).toArray()
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / limitNum));
+
+  return {
+    clientes: list.map(serialize),
+    data: list.map(serialize),
+    total,
+    totalPages,
+    currentPage: pageNum,
+    limit: limitNum
+  };
+}
+
+/**
+ * Obtener todos los clientes (o paginados si se pasan opciones).
+ */
+export async function listAllClientes(options) {
+  if (options && (options.page !== undefined || options.limit !== undefined)) {
+    return getClientesPaginated(options);
+  }
   const { clientes } = await getCollections();
   const list = await clientes.find({}).sort({ id: 1 }).toArray();
   return list.map(serialize);

@@ -8,6 +8,7 @@ import postRoutes from './api_post_service/routes.js';
 import putRoutes from './api_put_service/routes.js';
 import deleteRoutes from './api_delete_service/routes.js';
 import clienteRoutes from './src/routes/clienteRoutes.js';
+import tarjetaRoutes from './src/routes/tarjetaRoutes.js';
 import { connectToDatabase, seedDatabase } from './db_service/database.js';
 
 dotenv.config();
@@ -16,15 +17,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = Number(process.env.PORT || 5000);
+const port = Number(process.env.PORT || 3000);
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(tarjetaRoutes);
+app.use(clienteRoutes);
 app.use(getRoutes);
 app.use(postRoutes);
 app.use(putRoutes);
 app.use(deleteRoutes);
-app.use(clienteRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (_req, res) => {
