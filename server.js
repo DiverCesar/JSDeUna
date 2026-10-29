@@ -53,4 +53,9 @@ async function startApp() {
   }
 }
 
-startApp();
+if (process.env.NODE_ENV !== 'test') {
+  startApp();
+}
+
+export { app, startApp };
+export default app;

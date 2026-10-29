@@ -18,6 +18,14 @@ export async function connectToDatabase() {
   return db;
 }
 
+export async function closeDatabase() {
+  if (client) {
+    await client.close();
+    client = null;
+    db = null;
+  }
+}
+
 export async function getCollections() {
   const connectedDb = await connectToDatabase();
   return {
