@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { getCollections } from '../../db_service/database.js';
 import { serialize } from '../../db_service/models.js';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+$/;
 const PHONE_REGEX = /^09\d{8}$/;
 
 /**
@@ -18,7 +18,10 @@ export function validateClienteData(data = {}, isUpdate = false) {
   }
 
   if (!isUpdate || data.email !== undefined) {
-    if (!data.email || typeof data.email !== 'string' || !EMAIL_REGEX.test(data.email.trim())) {
+    const email = typeof data.email === 'string' ? data.email.trim() : '';
+    const domain = email.split('@')[1] || '';
+    const lastDot = domain.lastIndexOf('.');
+    if (!email || !EMAIL_REGEX.test(email) || lastDot <= 0 || lastDot === domain.length - 1) {
       errors.push('El email es inválido o no tiene un formato correcto.');
     }
   }

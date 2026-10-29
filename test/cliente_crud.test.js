@@ -140,6 +140,9 @@ test('CRUD Clientes - Pruebas completas sobre la entidad clientes', async (t) =>
       telefono: '0812345678'
     });
     assert.equal(errores.length, 3, 'Debe detectar los 3 errores de validación');
+    assert.deepEqual(validateClienteData({ email: 'usuario@dominio.com' }, true), []);
+    assert.ok(validateClienteData({ email: 'usuario@dominio' }, true).length > 0);
+    assert.ok(validateClienteData({ email: 'usuario@dominio.' }, true).length > 0);
   });
 
   await t.test('8. PAGINACIÓN - Debe paginar registros de 6 en 6 con total y páginas', async () => {
