@@ -9,6 +9,7 @@ import putRoutes from './api_put_service/routes.js';
 import deleteRoutes from './api_delete_service/routes.js';
 import clienteRoutes from './src/routes/clienteRoutes.js';
 import tarjetaRoutes from './src/routes/tarjetaRoutes.js';
+import transaccionRoutes from './src/routes/transaccionRoutes.js';
 import { connectToDatabase, seedDatabase } from './db_service/database.js';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(tarjetaRoutes);
 app.use(clienteRoutes);
+app.use(transaccionRoutes);
 app.use(getRoutes);
 app.use(postRoutes);
 app.use(putRoutes);

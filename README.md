@@ -64,6 +64,10 @@ http://localhost:5000
 - `GET /api/deuna/cuentas`
 - `GET /api/deuna/tarjetas`
 - `GET /api/deuna/transacciones`
+- `GET /api/deuna/transacciones/:id`
+- `POST /api/deuna/transacciones`
+- `PUT /api/deuna/transacciones/:id`
+- `DELETE /api/deuna/transacciones/:id`
 - `POST /api/deuna/seed`
 - `POST /api/deuna/transferencia`
 - `POST /api/deuna/recarga`

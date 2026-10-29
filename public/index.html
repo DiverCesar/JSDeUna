@@ -96,6 +96,9 @@
               <button @click="activeTab = 'cuentas'" :class="['flex-1 py-4 text-center font-bold text-sm transition-colors', activeTab === 'cuentas' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50']">
                 Cuentas (CRUD)
               </button>
+              <button @click="activeTab = 'transacciones'" :class="['flex-1 py-4 text-center font-bold text-sm transition-colors', activeTab === 'transacciones' ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50']">
+                Transacciones (CRUD)
+              </button>
             </div>
 
             <div class="p-6 md:p-8">
@@ -342,6 +345,104 @@
                     </table>
                   </div>
                 </div>
+
+                  <!-- Pestaña CRUD Transacciones -->
+                  <div v-if="activeTab === 'transacciones'" class="animation-fade-in space-y-6">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <h3 class="text-xl font-bold text-slate-800">
+                          {{ isEditingTransaccion ? 'Editar Transacción' : 'Registrar Nueva Transacción' }}
+                        </h3>
+                        <p class="text-xs text-slate-500">CRUD de transacciones conectado con MongoDB</p>
+                      </div>
+                      <span class="text-xs bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-full">
+                        {{ transacciones.length }} Registradas
+                      </span>
+                    </div>
+
+                    <form @submit.prevent="guardarTransaccion" class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-700 mb-1">Propietario</label>
+                          <input type="text" v-model="transaccionForm.quien" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-700 mb-1">Origen</label>
+                          <input type="text" v-model="transaccionForm.origen" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-700 mb-1">Destino</label>
+                          <input type="text" v-model="transaccionForm.destino" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-700 mb-1">Monto ($)</label>
+                          <input type="number" step="0.01" min="0.01" v-model="transaccionForm.monto" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-700 mb-1">Comisión ($)</label>
+                          <input type="number" step="0.01" min="0" v-model="transaccionForm.comision" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo</label>
+                          <select v-model="transaccionForm.tipo" required class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                            <option value="transferencia">Transferencia</option>
+                            <option value="recarga">Recarga</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-700 mb-1">Estado</label>
+                          <select v-model="transaccionForm.estado" class="w-full bg-white border border-gray-200 text-slate-800 rounded-lg px-3 py-2 text-sm">
+                            <option value="CONFIRMADA">Confirmada</option>
+                            <option value="FALLIDA">Fallida</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="flex gap-2 justify-end pt-1">
+                        <button v-if="isEditingTransaccion" type="button" @click="cancelarEdicionTransaccion" class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-slate-700 rounded-lg text-xs font-bold">
+                          Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold">
+                          {{ isEditingTransaccion ? 'Guardar Cambios' : 'Registrar Transacción' }}
+                        </button>
+                      </div>
+                    </form>
+
+                    <div class="rounded-xl border border-gray-100 overflow-hidden bg-white">
+                      <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                          <thead class="bg-gray-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-gray-100">
+                            <tr>
+                              <th class="px-3 py-2.5">ID</th>
+                              <th class="px-3 py-2.5">Propietario</th>
+                              <th class="px-3 py-2.5">Tipo</th>
+                              <th class="px-3 py-2.5">Origen / Destino</th>
+                              <th class="px-3 py-2.5">Monto</th>
+                              <th class="px-3 py-2.5">Estado</th>
+                              <th class="px-3 py-2.5 text-right">Acciones</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-100 text-slate-700">
+                            <tr v-for="t in transacciones" :key="t._id" class="hover:bg-purple-50/30">
+                              <td class="px-3 py-2.5 font-bold text-purple-700">#{{ t.id || t._id }}</td>
+                              <td class="px-3 py-2.5">{{ t.quien }}</td>
+                              <td class="px-3 py-2.5 capitalize">{{ t.tipo }}</td>
+                              <td class="px-3 py-2.5">{{ t.origen }} → {{ t.destino }}</td>
+                              <td class="px-3 py-2.5">${{ Number(t.monto).toFixed(2) }}</td>
+                              <td class="px-3 py-2.5">{{ t.estado }}</td>
+                              <td class="px-3 py-2.5 text-right space-x-1">
+                                <button @click="editarTransaccion(t)" title="Editar" class="p-1 text-slate-400 hover:text-purple-600 rounded">Editar</button>
+                                <button @click="eliminarTransaccion(t._id || t.id)" title="Eliminar" class="p-1 text-slate-400 hover:text-red-600 rounded">Eliminar</button>
+                              </td>
+                            </tr>
+                            <tr v-if="transacciones.length === 0">
+                              <td colspan="7" class="px-3 py-6 text-center text-slate-400 italic">No hay transacciones registradas.</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
               </div>
 
               <!-- Pestaña CRUD Tarjetas -->
@@ -527,6 +628,11 @@
           const isEditingTarjeta = ref(false);
           const cuentaForm = reactive({ id: null, cliente_id: '', numero_cuenta: '', alias: '', saldo: 0, estado_cuenta: 'ACTIVA' });
           const isEditingCuenta = ref(false);
+          const transaccionForm = reactive({
+            id: null, quien: '', origen: '', destino: '', monto: '', comision: 0,
+            tipo: 'transferencia', estado: 'CONFIRMADA'
+          });
+          const isEditingTransaccion = ref(false);
 
           const notification = reactive({ show: false, message: '', type: 'success' });
           const cuentas = ref([]);
@@ -924,6 +1030,78 @@
             }
           }
 
+          function editarTransaccion(t) {
+            isEditingTransaccion.value = true;
+            transaccionForm.id = t._id || t.id;
+            transaccionForm.quien = t.quien || '';
+            transaccionForm.origen = t.origen || '';
+            transaccionForm.destino = t.destino || '';
+            transaccionForm.monto = t.monto;
+            transaccionForm.comision = t.comision || 0;
+            transaccionForm.tipo = t.tipo || 'transferencia';
+            transaccionForm.estado = t.estado || 'CONFIRMADA';
+          }
+
+          function cancelarEdicionTransaccion() {
+            isEditingTransaccion.value = false;
+            transaccionForm.id = null;
+            transaccionForm.quien = '';
+            transaccionForm.origen = '';
+            transaccionForm.destino = '';
+            transaccionForm.monto = '';
+            transaccionForm.comision = 0;
+            transaccionForm.tipo = 'transferencia';
+            transaccionForm.estado = 'CONFIRMADA';
+          }
+
+          async function guardarTransaccion() {
+            try {
+              const method = isEditingTransaccion.value ? 'PUT' : 'POST';
+              const url = isEditingTransaccion.value
+                ? `${API.transacciones}/${transaccionForm.id}`
+                : API.transacciones;
+              const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  quien: transaccionForm.quien,
+                  origen: transaccionForm.origen,
+                  destino: transaccionForm.destino,
+                  monto: Number(transaccionForm.monto),
+                  comision: Number(transaccionForm.comision || 0),
+                  tipo: transaccionForm.tipo,
+                  estado: transaccionForm.estado
+                })
+              });
+              const data = await res.json();
+              if (res.ok && data.ok) {
+                showNotification(data.message || 'Transacción guardada exitosamente', 'success');
+                cancelarEdicionTransaccion();
+                await fetchData();
+              } else {
+                showNotification(data.error || 'Error al procesar transacción', 'error');
+              }
+            } catch (error) {
+              showNotification('Error de conexión', 'error');
+            }
+          }
+
+          async function eliminarTransaccion(id) {
+            if (!confirm('¿Estás seguro de eliminar esta transacción?')) return;
+            try {
+              const res = await fetch(`${API.transacciones}/${id}`, { method: 'DELETE' });
+              const data = await res.json();
+              if (res.ok && data.ok) {
+                showNotification(data.message || 'Transacción eliminada exitosamente', 'success');
+                await fetchData();
+              } else {
+                showNotification(data.error || 'No se pudo eliminar la transacción', 'error');
+              }
+            } catch (error) {
+              showNotification('Error de conexión', 'error');
+            }
+          }
+
           onMounted(() => {
             fetchData();
           });
@@ -938,6 +1116,8 @@
             isEditingTarjeta,
             cuentaForm,
             isEditingCuenta,
+            transaccionForm,
+            isEditingTransaccion,
             notification,
             cuentas,
             tarjetas,
@@ -971,6 +1151,10 @@
             cancelarEdicionCuenta,
             guardarCuenta,
             eliminarCuenta,
+            editarTransaccion,
+            cancelarEdicionTransaccion,
+            guardarTransaccion,
+            eliminarTransaccion,
             seedData,
             fetchData
           };
