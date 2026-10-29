@@ -21,7 +21,7 @@ router.get('/api/deuna/cuentas/:id', async (req, res) => {
     const param = req.params.id;
     let query;
 
-    if (!isNaN(Number(param))) {
+    if (!Number.isNaN(Number(param))) {
       query = { id: Number(param) };
     } else {
       query = { numero_cuenta: param };
@@ -53,7 +53,7 @@ router.get('/api/deuna/tarjetas/:id', async (req, res) => {
     const { tarjetas } = await getCollections();
     const param = req.params.id;
     let query;
-    if (!isNaN(Number(param))) {
+    if (!Number.isNaN(Number(param))) {
       query = { id: Number(param) };
     } else {
       query = { numero_tarjeta: param };

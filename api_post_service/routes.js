@@ -126,7 +126,7 @@ router.put('/api/deuna/cuentas/:id', async (req, res) => {
     const { alias, saldo, estado_cuenta } = req.body;
     const { cuentas } = await getCollections();
 
-    let query = !isNaN(Number(param)) ? { id: Number(param) } : { numero_cuenta: param };
+    let query = !Number.isNaN(Number(param)) ? { id: Number(param) } : { numero_cuenta: param };
 
     const updateFields = {};
     if (alias !== undefined) updateFields.alias = String(alias);
@@ -159,7 +159,7 @@ router.delete('/api/deuna/cuentas/:id', async (req, res) => {
     const param = req.params.id;
     const { cuentas } = await getCollections();
 
-    let query = !isNaN(Number(param)) ? { id: Number(param) } : { numero_cuenta: param };
+    let query = !Number.isNaN(Number(param)) ? { id: Number(param) } : { numero_cuenta: param };
 
     const result = await cuentas.deleteOne(query);
 

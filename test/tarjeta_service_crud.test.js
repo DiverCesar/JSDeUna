@@ -145,6 +145,10 @@ test('CRUD Tarjetas - Pruebas completas sobre la entidad tarjetas y tarjetaServi
       fecha_expiracion: '13/28'
     });
     assert.ok(errFecha.length > 0);
+
+    // En una actualización solo se validan los campos enviados
+    assert.deepEqual(validateTarjetaData({ banco: 'Banco Pichincha' }, true), []);
+    assert.ok(validateTarjetaData({ numero_tarjeta: null }, true).length > 0);
   });
 
   await t.test('7. PAGINACIÓN - Debe paginar tarjetas de 6 en 6 con total y páginas', async () => {

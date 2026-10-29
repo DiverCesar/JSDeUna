@@ -616,6 +616,13 @@
         clientes: '/api/deuna/clientes'
       };
 
+      function enmascararTarjeta(num) {
+        if (!num) return '**** **** **** ****';
+        const clean = String(num).replace(/\s+/g, '');
+        const last4 = clean.slice(-4);
+        return `**** **** **** ${last4}`;
+      }
+
       // 3. Crear la app
       const app = createApp({
         setup() {
@@ -676,6 +683,7 @@
                 showNotification(data.error || 'Error al poblar base de datos', 'error');
               }
             } catch (error) {
+              console.error('Error al poblar datos:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -774,7 +782,7 @@
                 body: JSON.stringify({
                   origen: transferForm.origen,
                   destino: transferForm.destino,
-                  monto: parseFloat(transferForm.monto)
+                  monto: Number.parseFloat(transferForm.monto)
                 })
               });
               const data = await res.json();
@@ -787,6 +795,7 @@
                 showNotification(data.error || 'Error en transferencia', 'error');
               }
             } catch (error) {
+              console.error('Error al realizar la transferencia:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -799,7 +808,7 @@
                 body: JSON.stringify({
                   numero_cuenta: recargaForm.numero_cuenta,
                   numero_tarjeta: recargaForm.numero_tarjeta,
-                  monto: parseFloat(recargaForm.monto)
+                  monto: Number.parseFloat(recargaForm.monto)
                 })
               });
               const data = await res.json();
@@ -811,6 +820,7 @@
                 showNotification(data.error || 'Error en recarga', 'error');
               }
             } catch (error) {
+              console.error('Error al realizar la recarga:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -856,6 +866,7 @@
                 showNotification(data.error || 'Error al procesar cliente', 'error');
               }
             } catch (error) {
+              console.error('Error al guardar el cliente:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -878,15 +889,9 @@
                 showNotification(data.error || 'No se pudo eliminar el cliente', 'error');
               }
             } catch (error) {
+              console.error('Error al eliminar el cliente:', error);
               showNotification('Error de conexión', 'error');
             }
-          }
-
-          function enmascararTarjeta(num) {
-            if (!num) return '**** **** **** ****';
-            const clean = String(num).replace(/\s+/g, '');
-            const last4 = clean.slice(-4);
-            return `**** **** **** ${last4}`;
           }
 
           function getClienteNombre(clienteId) {
@@ -938,6 +943,7 @@
                 showNotification(data.error || 'Error al procesar tarjeta', 'error');
               }
             } catch (error) {
+              console.error('Error al guardar la tarjeta:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -960,6 +966,7 @@
                 showNotification(data.error || 'No se pudo eliminar la tarjeta', 'error');
               }
             } catch (error) {
+              console.error('Error al eliminar la tarjeta:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -996,7 +1003,7 @@
                   cliente_id: Number(cuentaForm.cliente_id || 1),
                   numero_cuenta: cuentaForm.numero_cuenta,
                   alias: cuentaForm.alias,
-                  saldo: parseFloat(cuentaForm.saldo || 0),
+                  saldo: Number.parseFloat(cuentaForm.saldo || 0),
                   estado_cuenta: cuentaForm.estado_cuenta
                 })
               });
@@ -1010,6 +1017,7 @@
                 showNotification(data.error || 'Error al procesar la cuenta', 'error');
               }
             } catch (error) {
+              console.error('Error al guardar la cuenta:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -1026,6 +1034,7 @@
                 showNotification(data.error || 'No se pudo eliminar la cuenta', 'error');
               }
             } catch (error) {
+              console.error('Error al eliminar la cuenta:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -1082,6 +1091,7 @@
                 showNotification(data.error || 'Error al procesar transacción', 'error');
               }
             } catch (error) {
+              console.error('Error al guardar la transacción:', error);
               showNotification('Error de conexión', 'error');
             }
           }
@@ -1098,6 +1108,7 @@
                 showNotification(data.error || 'No se pudo eliminar la transacción', 'error');
               }
             } catch (error) {
+              console.error('Error al eliminar la transacción:', error);
               showNotification('Error de conexión', 'error');
             }
           }

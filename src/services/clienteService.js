@@ -55,8 +55,8 @@ export function buildClienteQuery(param) {
  * Obtener clientes paginados con cálculo de total y páginas.
  */
 export async function getClientesPaginated({ page = 1, limit = 6 } = {}) {
-  const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 6));
+  const pageNum = Math.max(1, Number.parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 6));
   const skip = (pageNum - 1) * limitNum;
 
   const { clientes } = await getCollections();
@@ -160,6 +160,32 @@ export async function createCliente(payload = {}) {
 /**
  * Actualizar los datos de un cliente existente.
  */
+async function addUniqueClienteFieldUpdate({
+  clientes,
+  clienteExistente,
+  payload,
+  updateFields,
+  field,
+  normalize,
+  errorMessage
+}) {
+  if (payload[field] === undefined) return null;
+
+  const normalizedValue = normalize(payload[field]);
+  if (normalizedValue !== clienteExistente[field]) {
+    const valueInUse = await clientes.findOne({
+      [field]: normalizedValue,
+      _id: { $ne: clienteExistente._id }
+    });
+    if (valueInUse) {
+      return { ok: false, status: 409, error: errorMessage };
+    }
+  }
+
+  updateFields[field] = normalizedValue;
+  return null;
+}
+
 export async function updateCliente(param, payload = {}) {
   const { clientes } = await getCollections();
   const query = buildClienteQuery(param);
@@ -182,33 +208,27 @@ export async function updateCliente(param, payload = {}) {
     updateFields.nombre = payload.nombre.trim();
   }
 
-  if (payload.email !== undefined) {
-    const emailNormalizado = payload.email.trim().toLowerCase();
-    if (emailNormalizado !== clienteExistente.email) {
-      const emailEnUso = await clientes.findOne({
-        email: emailNormalizado,
-        _id: { $ne: clienteExistente._id }
-      });
-      if (emailEnUso) {
-        return { ok: false, status: 409, error: 'El correo electrónico ya está en uso por otro cliente.' };
-      }
-    }
-    updateFields.email = emailNormalizado;
-  }
+  const emailError = await addUniqueClienteFieldUpdate({
+    clientes,
+    clienteExistente,
+    payload,
+    updateFields,
+    field: 'email',
+    normalize: (email) => email.trim().toLowerCase(),
+    errorMessage: 'El correo electrónico ya está en uso por otro cliente.'
+  });
+  if (emailError) return emailError;
 
-  if (payload.telefono !== undefined) {
-    const telefonoNormalizado = payload.telefono.trim();
-    if (telefonoNormalizado !== clienteExistente.telefono) {
-      const telEnUso = await clientes.findOne({
-        telefono: telefonoNormalizado,
-        _id: { $ne: clienteExistente._id }
-      });
-      if (telEnUso) {
-        return { ok: false, status: 409, error: 'El número de teléfono ya está en uso por otro cliente.' };
-      }
-    }
-    updateFields.telefono = telefonoNormalizado;
-  }
+  const telefonoError = await addUniqueClienteFieldUpdate({
+    clientes,
+    clienteExistente,
+    payload,
+    updateFields,
+    field: 'telefono',
+    normalize: (telefono) => telefono.trim(),
+    errorMessage: 'El número de teléfono ya está en uso por otro cliente.'
+  });
+  if (telefonoError) return telefonoError;
 
   if (Object.keys(updateFields).length === 0) {
     return { ok: false, status: 400, error: 'No se enviaron campos válidos para actualizar.' };

@@ -5,35 +5,52 @@ import { serialize } from '../../db_service/models.js';
 const CARD_REGEX = /^\d{16}$/;
 const EXPIRATION_REGEX = /^(0[1-9]|1[0-2])\/\d{2}$/;
 
+function validateClienteId(value) {
+  if (value === undefined || value === null || Number.isNaN(Number(value)) || Number(value) <= 0) {
+    return 'El cliente asociado es obligatorio y debe ser un ID válido.';
+  }
+  return null;
+}
+
+function validateNumeroTarjeta(value) {
+  const numero = value !== undefined && value !== null ? String(value).trim() : '';
+  if (!numero || !CARD_REGEX.test(numero)) {
+    return 'El número de tarjeta es obligatorio y debe tener exactamente 16 dígitos numéricos.';
+  }
+  return null;
+}
+
+function validateBanco(value) {
+  if (!value || typeof value !== 'string' || value.trim().length < 2) {
+    return 'El nombre del banco es obligatorio y debe tener al menos 2 caracteres.';
+  }
+  return null;
+}
+
+function validateFechaExpiracion(value) {
+  const fecha = value !== undefined && value !== null ? String(value).trim() : '';
+  if (!fecha || !EXPIRATION_REGEX.test(fecha)) {
+    return 'La fecha de expiración es inválida. Debe tener formato MM/AA (ej: 12/28).';
+  }
+  return null;
+}
+
 /**
  * Valida los datos obligatorios y formato de una tarjeta.
  */
 export function validateTarjetaData(data = {}, isUpdate = false) {
   const errors = [];
+  const fields = [
+    ['cliente_id', validateClienteId],
+    ['numero_tarjeta', validateNumeroTarjeta],
+    ['banco', validateBanco],
+    ['fecha_expiracion', validateFechaExpiracion]
+  ];
 
-  if (!isUpdate || data.cliente_id !== undefined) {
-    if (data.cliente_id === undefined || data.cliente_id === null || Number.isNaN(Number(data.cliente_id)) || Number(data.cliente_id) <= 0) {
-      errors.push('El cliente asociado es obligatorio y debe ser un ID válido.');
-    }
-  }
-
-  if (!isUpdate || data.numero_tarjeta !== undefined) {
-    const num = data.numero_tarjeta !== undefined && data.numero_tarjeta !== null ? String(data.numero_tarjeta).trim() : '';
-    if (!num || !CARD_REGEX.test(num)) {
-      errors.push('El número de tarjeta es obligatorio y debe tener exactamente 16 dígitos numéricos.');
-    }
-  }
-
-  if (!isUpdate || data.banco !== undefined) {
-    if (!data.banco || typeof data.banco !== 'string' || data.banco.trim().length < 2) {
-      errors.push('El nombre del banco es obligatorio y debe tener al menos 2 caracteres.');
-    }
-  }
-
-  if (!isUpdate || data.fecha_expiracion !== undefined) {
-    const fecha = data.fecha_expiracion !== undefined && data.fecha_expiracion !== null ? String(data.fecha_expiracion).trim() : '';
-    if (!fecha || !EXPIRATION_REGEX.test(fecha)) {
-      errors.push('La fecha de expiración es inválida. Debe tener formato MM/AA (ej: 12/28).');
+  for (const [field, validate] of fields) {
+    if (!isUpdate || data[field] !== undefined) {
+      const error = validate(data[field]);
+      if (error) errors.push(error);
     }
   }
 
@@ -66,8 +83,8 @@ export function buildTarjetaQuery(param) {
  * Obtener tarjetas paginadas con cálculo de total y páginas.
  */
 export async function getTarjetasPaginated({ page = 1, limit = 6 } = {}) {
-  const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 6));
+  const pageNum = Math.max(1, Number.parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 6));
   const skip = (pageNum - 1) * limitNum;
 
   const { tarjetas } = await getCollections();
@@ -173,6 +190,41 @@ export async function createTarjeta(payload = {}) {
 /**
  * Actualizar los datos de una tarjeta existente.
  */
+async function getClienteIdUpdate(clientes, value) {
+  if (value === undefined) return { value: undefined };
+
+  const clienteId = Number(value);
+  const clienteExiste = await clientes.findOne({ id: clienteId });
+  if (!clienteExiste) {
+    return {
+      error: { ok: false, status: 400, error: `El cliente con ID ${clienteId} no existe.` }
+    };
+  }
+  return { value: clienteId };
+}
+
+async function getNumeroTarjetaUpdate(tarjetas, tarjetaExistente, value) {
+  if (value === undefined) return { value: undefined };
+
+  const numeroNormalizado = String(value).trim();
+  if (numeroNormalizado !== tarjetaExistente.numero_tarjeta) {
+    const numeroEnUso = await tarjetas.findOne({
+      numero_tarjeta: numeroNormalizado,
+      _id: { $ne: tarjetaExistente._id }
+    });
+    if (numeroEnUso) {
+      return {
+        error: {
+          ok: false,
+          status: 409,
+          error: 'El número de tarjeta ya está en uso por otra tarjeta.'
+        }
+      };
+    }
+  }
+  return { value: numeroNormalizado };
+}
+
 export async function updateTarjeta(param, payload = {}) {
   const { clientes, tarjetas } = await getCollections();
   const query = buildTarjetaQuery(param);
@@ -192,27 +244,18 @@ export async function updateTarjeta(param, payload = {}) {
 
   const updateFields = {};
 
-  if (payload.cliente_id !== undefined) {
-    const clienteId = Number(payload.cliente_id);
-    const clienteExiste = await clientes.findOne({ id: clienteId });
-    if (!clienteExiste) {
-      return { ok: false, status: 400, error: `El cliente con ID ${clienteId} no existe.` };
-    }
-    updateFields.cliente_id = clienteId;
-  }
+  const clienteIdUpdate = await getClienteIdUpdate(clientes, payload.cliente_id);
+  if (clienteIdUpdate.error) return clienteIdUpdate.error;
+  if (clienteIdUpdate.value !== undefined) updateFields.cliente_id = clienteIdUpdate.value;
 
-  if (payload.numero_tarjeta !== undefined) {
-    const numeroNormalizado = String(payload.numero_tarjeta).trim();
-    if (numeroNormalizado !== tarjetaExistente.numero_tarjeta) {
-      const numEnUso = await tarjetas.findOne({
-        numero_tarjeta: numeroNormalizado,
-        _id: { $ne: tarjetaExistente._id }
-      });
-      if (numEnUso) {
-        return { ok: false, status: 409, error: 'El número de tarjeta ya está en uso por otra tarjeta.' };
-      }
-    }
-    updateFields.numero_tarjeta = numeroNormalizado;
+  const numeroTarjetaUpdate = await getNumeroTarjetaUpdate(
+    tarjetas,
+    tarjetaExistente,
+    payload.numero_tarjeta
+  );
+  if (numeroTarjetaUpdate.error) return numeroTarjetaUpdate.error;
+  if (numeroTarjetaUpdate.value !== undefined) {
+    updateFields.numero_tarjeta = numeroTarjetaUpdate.value;
   }
 
   if (payload.banco !== undefined) {

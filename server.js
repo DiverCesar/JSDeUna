@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import getRoutes from './api_get_service/routes.js';
 import postRoutes from './api_post_service/routes.js';
@@ -39,17 +39,13 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-async function startApp() {
-  try {
-    await connectToDatabase();
-    await seedDatabase();
-    app.listen(port, () => {
-      console.log(`Deuna API running on http://localhost:${port}`);
-    });
-  } catch (error) {
-    console.error('Failed to start app:', error.message);
-    process.exit(1);
-  }
+try {
+  await connectToDatabase();
+  await seedDatabase();
+  app.listen(port, () => {
+    console.log(`Deuna API running on http://localhost:${port}`);
+  });
+} catch (error) {
+  console.error('Failed to start app:', error.message);
+  process.exit(1);
 }
-
-startApp();
