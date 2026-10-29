@@ -126,18 +126,25 @@ router.put('/api/deuna/cuentas/:id', async (req, res) => {
     const { alias, saldo, estado_cuenta } = req.body;
     const { cuentas } = await getCollections();
 
-    let query = !Number.isNaN(Number(param)) ? { id: Number(param) } : { numero_cuenta: param };
-
     const updateFields = {};
     if (alias !== undefined) updateFields.alias = String(alias);
     if (saldo !== undefined) updateFields.saldo = Number(saldo);
     if (estado_cuenta !== undefined) updateFields.estado_cuenta = String(estado_cuenta);
 
-    const result = await cuentas.findOneAndUpdate(
-      query,
-      { $set: updateFields },
-      { returnDocument: 'after' }
+    const update = { $set: updateFields };
+    const options = { returnDocument: 'after' };
+    let result = await cuentas.findOneAndUpdate(
+      { numero_cuenta: param },
+      update,
+      options
     );
+    if (!result && !Number.isNaN(Number(param))) {
+      result = await cuentas.findOneAndUpdate(
+        { id: Number(param) },
+        update,
+        options
+      );
+    }
 
     if (!result) {
       return res.status(404).json({ ok: false, error: 'Cuenta no encontrada' });
@@ -159,9 +166,10 @@ router.delete('/api/deuna/cuentas/:id', async (req, res) => {
     const param = req.params.id;
     const { cuentas } = await getCollections();
 
-    let query = !Number.isNaN(Number(param)) ? { id: Number(param) } : { numero_cuenta: param };
-
-    const result = await cuentas.deleteOne(query);
+    let result = await cuentas.deleteOne({ numero_cuenta: param });
+    if (result.deletedCount === 0 && !Number.isNaN(Number(param))) {
+      result = await cuentas.deleteOne({ id: Number(param) });
+    }
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ ok: false, error: 'Cuenta no encontrada' });

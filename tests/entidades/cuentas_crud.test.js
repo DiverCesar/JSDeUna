@@ -1,6 +1,6 @@
 import request from 'supertest';
-import app from '../server.js'; // O la instancia de tu app Express
-import { closeDatabase, getCollections } from '../db_service/database.js';
+import app from '../../server.js';
+import { closeDatabase, getCollections } from '../../db_service/database.js';
 
 describe('CRUD Cuentas - Pruebas completas sobre la entidad Cuentas', () => {
   // Limpieza y cierre de la conexión después de todas las pruebas

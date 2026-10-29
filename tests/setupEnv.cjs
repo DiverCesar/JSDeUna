@@ -1,7 +1,7 @@
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 
 dotenv.config({ path: '.env.test' });
-dotenv.config(); // fallback to .env for MONGO_URI if not in .env.test
+dotenv.config();
 
 process.env.NODE_ENV = 'test';
 process.env.IP_ADDRESS = process.env.IP_ADDRESS || '127.0.0.1';

@@ -28,8 +28,8 @@ Aplicación web para simular operaciones bancarias inmediatas. El backend está 
 - Express 4.
 - MongoDB y el driver oficial `mongodb`.
 - Vue 3 y Tailwind CSS desde CDN.
-- Jest y Supertest para pruebas transversales.
-- `node:test` para pruebas unitarias y CRUD.
+- Jest para las suites CRUD y transversales; Supertest para las solicitudes HTTP de integración.
+- `node:test` para las pruebas nativas que permanecen en `test/`.
 - ESLint para análisis estático.
 
 ## Requisitos
@@ -343,41 +343,47 @@ Las respuestas exitosas de transferencia/recarga usan HTTP `200`; errores de val
 
 ## Pruebas y calidad
 
-El proyecto tiene dos grupos de pruebas; no usan el mismo runner:
+### Jest: seis suites CRUD y de reglas de negocio
 
-### Jest: pruebas transversales HTTP
-
-`npm test` ejecuta las pruebas Jest configuradas en `jest.config.js`, ubicadas en `tests/`. Usan Supertest para enviar solicitudes HTTP a Express y verifican el flujo completo y los efectos sobre MongoDB.
+Jest descubre seis archivos en `tests/`: una suite para cada entidad (clientes, cuentas, tarjetas y transacciones) y dos suites para las reglas de negocio (transferencias y recargas). Antes aparecían solo dos suites porque Jest estaba configurado para buscar en `tests/`, mientras que los archivos CRUD estaban en `test/` y usaban `node:test`. Las pruebas CRUD validan las operaciones de cada entidad; las transversales usan Supertest y verifican también los cambios en MongoDB.
 
 ```bash
-# Ejecutar las dos suites transversales
+# Ejecutar las seis suites
 npm test
 
-# Ejecutar solo transferencia
-npm test -- tests/transversales/transferencia.test.js
+# Ejecutar las seis suites y generar el reporte de cobertura en coverage/
+npm test -- --coverage
 
-# Ejecutar solo recarga
-npm test -- tests/transversales/recarga.test.js
+# Ejecutar Jest directamente (Node.js 22 necesita habilitar los módulos ESM)
+NODE_OPTIONS=--experimental-vm-modules npx jest --coverage
 ```
 
-Estas pruebas cargan `.env.test`, que por defecto usa la base `deuna_test_db`. MongoDB debe estar activo y accesible.
+En Windows PowerShell, configura la variable antes de invocar Jest:
 
-### Node.js Test Runner: unitarias y CRUD
+```powershell
+$env:NODE_OPTIONS="--experimental-vm-modules"
+npx jest --coverage
+```
 
-Los archivos de `test/` usan `node:test`, no Jest. Ejecutar toda la suite:
+El comando `npx jest --coverage` sin esa opción puede fallar en Node.js 22 antes de ejecutar las pruebas, porque el proyecto usa módulos ESM. La alternativa `npm test -- --coverage` ya activa el soporte ESM.
+
+Las suites cargan `.env.test`, que por defecto usa la base `deuna_test_db`. MongoDB debe estar activo y accesible; usa una base dedicada a pruebas, ya que las pruebas crean y borran registros de prueba.
+
+| Tipo | Archivo |
+|---|---|
+| CRUD de clientes | `tests/entidades/cliente_crud.test.js` |
+| CRUD de cuentas | `tests/entidades/cuentas_crud.test.js` |
+| CRUD de tarjetas | `tests/entidades/tarjeta_crud.test.js` |
+| CRUD de transacciones | `tests/entidades/transaccion_crud.test.js` |
+| Regla de transferencia | `tests/transversales/transferencia.test.js` |
+| Regla de recarga | `tests/transversales/recarga.test.js` |
+
+### Node.js Test Runner
+
+Las pruebas nativas que aún están en `test/` se ejecutan por separado con `node:test`:
 
 ```bash
 npm run test:native
-```
-
-Ejecutar solo el CRUD de una entidad:
-
-```bash
-node --test test/cliente_crud.test.js
-node --test test/tarjeta_service_crud.test.js
-node --test test/tarjetas_crud.test.js
-node --test test/transaccion_crud.test.js
-node --test test/logic.test.js
 ```
 
 ### ESLint
@@ -399,6 +405,7 @@ db_service/            Conexión MongoDB, colecciones y seed del servidor Expres
 public/                Interfaz web Vue 3 y Tailwind CSS
 src/routes/            Rutas CRUD actuales de clientes, tarjetas y transacciones
 src/services/          Lógica CRUD y lógica de las operaciones bancarias
-test/                  Pruebas unitarias y CRUD con node:test
-tests/transversales/   Pruebas HTTP con Jest y Supertest
+test/                  Pruebas restantes con node:test
+tests/entidades/       Cuatro suites CRUD con Jest
+tests/transversales/   Dos suites de reglas de negocio con Jest y Supertest
 ```

@@ -57,7 +57,18 @@ El objetivo principal es asegurar que los procesos que involucran varias entidad
 
 ## 4. Pruebas Transversales Realizadas
 
-Se implementaron pruebas de punta a punta organizadas en el directorio `tests/transversales/`:
+Las pruebas transversales de punta a punta están organizadas en `tests/transversales/`. Se complementan con cuatro suites CRUD, una por cada entidad, en `tests/entidades/`.
+
+### Suites CRUD por entidad
+
+| Entidad | Archivo | Cobertura principal |
+|---|---|---|
+| Clientes | `tests/entidades/cliente_crud.test.js` | Crear, consultar, actualizar, eliminar, validar integridad referencial y paginar. |
+| Cuentas | `tests/entidades/cuentas_crud.test.js` | CRUD HTTP con Supertest y comprobación de cuenta por ID o número. |
+| Tarjetas | `tests/entidades/tarjeta_crud.test.js` | CRUD, validaciones de formato, titular y paginación. |
+| Transacciones | `tests/entidades/transaccion_crud.test.js` | Crear, consultar por ID/ObjectId, actualizar y eliminar. |
+
+Cada uno de estos archivos cuenta como una suite de Jest.
 
 ### Regla 1: Transferencia de Dinero entre Cuentas
 **Archivo:** `tests/transversales/transferencia.test.js`
@@ -106,10 +117,9 @@ Se implementaron pruebas de punta a punta organizadas en el directorio `tests/tr
   - Entornos configurados: Node.js, ES2024 y plugin de Jest para los archivos dentro de `tests/`.
   - Ignora carpetas de dependencias y reportes (`node_modules/`, `.scannerwork/`, `public/`).
 * **Problemas encontrados y correcciones:**
-  - El proyecto base se encontraba limpio de errores de sintaxis críticos.
-  - Se configuró la tolerancia para argumentos descartados que inicien con guión bajo (`_req`, `_`) en `no-unused-vars`.
-  - Se añadió la exportación condicional limpia en `server.js` (`startApp` solo cuando `NODE_ENV !== 'test'`) para permitir pruebas con Supertest sin dejar puertos bloqueados ni conexiones huérfanas.
-  - No hubo necesidad de alterar la lógica interna del negocio.
+  - El archivo de preparación usaba sintaxis ESM, pero Jest lo cargaba como CommonJS. Se cambió a CommonJS (`tests/setupEnv.cjs`) para evitar ese error.
+  - En Node.js 22, Jest necesita ejecutarse con `--experimental-vm-modules` para cargar los archivos ESM del proyecto.
+  - Las consultas de cuentas buscan primero el número de cuenta exacto y luego el ID numérico; así los números de cuenta con ceros iniciales no se interpretan erróneamente como IDs.
 
 ---
 
@@ -117,11 +127,22 @@ Se implementaron pruebas de punta a punta organizadas en el directorio `tests/tr
 
 Asegúrate de contar con tus dependencias instaladas (`npm install`).
 
-### 1. Ejecutar las Pruebas Transversales (Jest + Supertest)
+### 1. Ejecutar las seis suites de Jest
 ```bash
 npm test
 ```
-> Ejecuta la suite de pruebas transversales de Jest (`tests/transversales/`) comunicándose con MongoDB y validando las respuestas de Supertest.
+> Ejecuta cuatro suites CRUD (clientes, cuentas, tarjetas y transacciones) y dos suites de reglas de negocio (transferencias y recargas).
+
+Para generar el reporte de cobertura:
+```bash
+npm test -- --coverage
+```
+
+También se puede ejecutar Jest directamente en Node.js 22 habilitando sus módulos ESM:
+```bash
+NODE_OPTIONS=--experimental-vm-modules npx jest --coverage
+```
+> Ejecutar `npx jest --coverage` sin la opción ESM puede fallar antes de iniciar las pruebas. Ambas formas requieren MongoDB accesible y cargan la base de pruebas `deuna_test_db` desde `.env.test`.
 
 ### 2. Ejecutar la Verificación de Calidad de Código (ESLint)
 ```bash
@@ -133,7 +154,7 @@ npm run lint
 ```bash
 npm run test:native
 ```
-> Conserva intactas las 31 pruebas unitarias y CRUD existentes en la carpeta `test/`.
+> Ejecuta las pruebas restantes que usan `node:test` en `test/`. Las seis suites descritas en esta guía ahora se ejecutan con Jest.
 
 ---
 
@@ -143,13 +164,15 @@ npm run test:native
 
 | Suite de Pruebas | Archivo | Pruebas | Estado |
 | :--- | :--- | :---: | :---: |
-| **Transferencias** | `tests/transversales/transferencia.test.js` | 4 / 4 | ✅ PASÓ |
-| **Recargas** | `tests/transversales/recarga.test.js` | 3 / 3 | ✅ PASÓ |
-| **Total Transversales** | **2 Suites** | **7 / 7** | **100% Exitoso** |
-| **Pruebas Nativas Previas** | `test/**/*.test.js` | 31 / 31 | ✅ PASÓ |
-| **Revisión ESLint** | Todo el proyecto | 0 Errores | ✅ LIMPIO |
+| **Clientes** | `tests/entidades/cliente_crud.test.js` | 8 | ✅ PASÓ |
+| **Cuentas** | `tests/entidades/cuentas_crud.test.js` | 9 | ✅ PASÓ |
+| **Tarjetas** | `tests/entidades/tarjeta_crud.test.js` | 7 | ✅ PASÓ |
+| **Transacciones** | `tests/entidades/transaccion_crud.test.js` | 4 | ✅ PASÓ |
+| **Transferencias** | `tests/transversales/transferencia.test.js` | 4 | ✅ PASÓ |
+| **Recargas** | `tests/transversales/recarga.test.js` | 3 | ✅ PASÓ |
+| **Total Jest** | **6 suites** | **35 / 35** | **✅ PASÓ** |
 
 ### Observaciones Finales
 
-1. **Aislamiento y limpieza de datos:** Cada prueba utiliza identificadores y prefijos aislados (`TEST-CTA-...`, `TEST-CARD-...`, IDs `901+`), limpiando antes (`beforeEach`) y después (`afterEach`) de cada ejecución para no alterar los datos semilla predeterminados del sistema.
-2. **Sin cambios disruptivos en producción:** `server.js` únicamente adaptó la invocación a `startApp()` condicionada a `NODE_ENV !== 'test'` para que Supertest pueda consumir la app de Express sin generar conflictos de puerto. La lógica de negocio permaneció 100% fiel a la implementación original.
+1. **Aislamiento y limpieza de datos:** Las suites preparan y eliminan fixtures con IDs y prefijos dedicados para evitar depender de datos semilla y no alterar las colecciones habituales.
+2. **Cobertura del comando:** `npx jest --coverage` debe ejecutarse con `NODE_OPTIONS=--experimental-vm-modules` en Node.js 22; `npm test -- --coverage` ya activa esa opción mediante el script existente.

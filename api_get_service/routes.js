@@ -19,15 +19,10 @@ router.get('/api/deuna/cuentas/:id', async (req, res) => {
   try {
     const { cuentas } = await getCollections();
     const param = req.params.id;
-    let query;
-
-    if (!Number.isNaN(Number(param))) {
-      query = { id: Number(param) };
-    } else {
-      query = { numero_cuenta: param };
+    let cuenta = await cuentas.findOne({ numero_cuenta: param });
+    if (!cuenta && !Number.isNaN(Number(param))) {
+      cuenta = await cuentas.findOne({ id: Number(param) });
     }
-
-    const cuenta = await cuentas.findOne(query);
     if (!cuenta) {
       return res.status(404).json({ ok: false, error: 'Cuenta no encontrada' });
     }
