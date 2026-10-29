@@ -18,6 +18,14 @@ export async function connectToDatabase() {
   return db;
 }
 
+export async function closeDatabase() {
+  if (client) {
+    await client.close();
+    client = null;
+    db = null;
+  }
+}
+
 export async function getCollections() {
   const connectedDb = await connectToDatabase();
   return {
@@ -92,7 +100,7 @@ export async function seedDatabase() {
       monto: 25,
       comision: 0.4,
       cuando: new Date().toISOString(),
-      desde_donde: '192.168.1.1',
+      desde_donde: process.env.IP_ADDRESS,
       estado: 'CONFIRMADA',
       tipo: 'transferencia'
     });

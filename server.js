@@ -18,6 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.disable('x-powered-by');
 const port = Number(process.env.PORT || 3000);
 
 app.use(express.json({ limit: '1mb' }));
@@ -39,13 +40,18 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-try {
-  await connectToDatabase();
-  await seedDatabase();
-  app.listen(port, () => {
-    console.log(`Deuna API running on http://localhost:${port}`);
-  });
-} catch (error) {
-  console.error('Failed to start app:', error.message);
-  process.exit(1);
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    await connectToDatabase();
+    await seedDatabase();
+    app.listen(port, () => {
+      console.log(`Deuna API running on http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error('Failed to start app:', error.message);
+    process.exit(1);
+  }
 }
+
+export { app };
+export default app;
